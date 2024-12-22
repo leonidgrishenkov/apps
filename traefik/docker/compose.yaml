@@ -1,0 +1,35 @@
+---
+services:
+  traefik:
+    image: docker.io/traefik:v3.1.5
+    container_name: traefik
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../config/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ../config/config.yaml:/etc/traefik/config.yaml:ro
+      - ../certs/:/var/traefik/certs/:ro
+    networks:
+      - frontend
+    restart: unless-stopped
+
+  nginx:
+    image: docker.io/nginx:latest
+    container_name: nginx
+    restart: unless-stopped
+    networks:
+      - frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nginx.tls=true"
+      - "traefik.http.routers.nginx.entrypoints=websecure"
+      - 'traefik.http.routers.nginx.rule=Host("nginx.leonidgrishenkov.com")'
+    depends_on:
+      - traefik
+
+networks:
+  frontend:
+    external: true

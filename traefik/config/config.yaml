@@ -1,0 +1,36 @@
+---
+tls:
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /var/traefik/certs/leonidgrishenkov.com.crt
+        keyFile: /var/traefik/certs/leonidgrishenkov.com.key
+
+http:
+  middlewares:
+    auth:
+      basicAuth:
+        users:
+          - "yc-user:$apr1$qDyXliuT$BLUz5rKRjU4jrBq.ZMW3u/"
+  routers:
+    traefik-dashboard:
+      rule: "Host(`traefik.leonidgrishenkov.com`)"
+      service: api@internal
+      entryPoints:
+        - websecure
+      tls: {}
+      middlewares:
+        - auth
+
+    vaultwarden:
+      rule: "Host(`vaultwarden.leonidgrishenkov.com`)"
+      service: vaultwarden
+      entryPoints:
+        - websecure
+      tls: {}
+
+  services:
+    vaultwarden:
+      loadBalancer:
+        servers:
+          - url: "http://vaultwarden:80"
